@@ -1,0 +1,294 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+body {
+  font-family: 'San Francisco', 'SF Pro Display', 'Segoe UI', 'Meiryo', sans-serif;
+  background: linear-gradient(135deg, #f6f6f7 0%, #eaeef3 100%);
+  color: #222;
+  overscroll-behavior: none;
+}
+    .container {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 28px 12px 38px 12px;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 6px 36px #0001, 0 1.5px 8px #7e7e7e11;
+      border: 1.5px solid #ececec;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      background: #f5f6fa;
+      border-radius: 14px 14px 0 0;
+      box-shadow: 0 2.5px 10px #a4b4d922;
+      padding-left: 2px;
+    }
+    .tab {
+      padding: 10px 32px;
+      background: transparent;
+      border-radius: 13px 13px 0 0;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1.05em;
+      color: #2980fe;
+      border: none;
+      border-bottom: 2.5px solid transparent;
+      transition: all 0.14s cubic-bezier(.48,.01,.6,1.01);
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab.active, .tab:hover {
+      background: #e3ebfa;
+      color: #007aff;
+      border-bottom: 3px solid #007aff;
+      box-shadow: 0 3px 14px #007aff14;
+      font-weight: 700;
+    }
+    input, select {
+      padding: 9px 10px;
+      font-size: 1.01em;
+      border: 1.3px solid #d2d4dc;
+      border-radius: 11px;
+      background: #f8fafd;
+      box-shadow: 0 2.5px 12px #eef2fb13 inset;
+      outline: none;
+      transition: border 0.18s, box-shadow 0.17s;
+      max-width: 160px;
+      box-sizing: border-box;
+      margin-bottom: 3px;
+    }
+    .siteName { max-width: 190px; }
+    .numeric { min-width: 120px; }
+    .pave-type { min-width: 140px; }
+    input:focus, select:focus {
+      border: 1.7px solid #007aff;
+      background: #f3faff;
+      box-shadow: 0 0 0 2px #007aff15;
+    }
+    input[readonly], .readonly {
+      background: #f4f4f7 !important;
+      color: #bbb;
+      pointer-events: none;
+    }
+    .btn {
+      padding: 8px 22px;
+      background: linear-gradient(180deg,#007aff 0%,#005ed6 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 12px;
+      box-shadow: 0 2px 8px #007aff15, 0 1.5px 3px #4d8fff08;
+      transition: background 0.18s, box-shadow 0.17s;
+      letter-spacing: 0.01em;
+    }
+    .btn:hover { background: #005ed6; }
+    .btn:active { box-shadow: 0 0px 2px #007aff14; background: #297aff; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+    .controls select, .controls button { margin-left: 0; }
+    .block {
+      margin: 14px 0 24px 0;
+      padding: 22px 12px 16px 12px;
+      background: #f9fafb;
+      border-radius: 17px;
+      box-shadow: 0 1.5px 8px #007aff09;
+      border: 1px solid #eef0f5;
+      overflow-x: visible;
+    }
+    .block label {
+      font-weight: 500;
+      margin-right: 10px;
+      color: #445;
+      letter-spacing: 0.01em;
+      display: inline-flex;
+      align-items: center;
+    }
+    .block label input[type="checkbox"] {
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    h4 {
+      font-size: 1.18em;
+      color: #007aff;
+      margin-bottom: 0.5em;
+      margin-top: 0.3em;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    table, .ss-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      margin-top: 13px;
+      background: #fff;
+      box-shadow: 0 2px 18px #4c8bfd09;
+      border-radius: 11px;
+      overflow: hidden;
+      min-width: 800px;
+      font-size: 1em;
+      border: 1px solid #f3f4fa;
+    }
+    th, td, .ss-table th, .ss-table td {
+      border-bottom: 1.5px solid #e9eefa;
+      padding: 10px 7px;
+      text-align: center;
+      white-space: nowrap;
+      font-size: 0.99em;
+    }
+    th, .ss-table th {
+      background: #f4f7fd;
+      color: #007aff;
+      font-weight: bold;
+      border-top: none;
+      font-size: 1.04em;
+    }
+    tr:last-child td { border-bottom: none; }
+    .ss-table {
+      margin-top: 13px;
+      background: #fff;
+      border-radius: 13px;
+      border: 1.5px solid #e6eef5;
+      min-width: 1000px;
+      width: auto;
+      display: inline-block;
+      font-size: 1.01em;
+    }
+    .ss-table th, .ss-table td {
+      border-right: 1.5px solid #eaeaea;
+    }
+    .ss-table tr td:last-child, .ss-table tr th:last-child { border-right: none; }
+    .ss-table tr:last-child td { border-bottom: none; }
+    table input { min-width: 120px; }
+.sum {
+      margin-top: 14px;
+      font-weight: 600;
+      color: #007aff;
+      font-size: 1em;
+      letter-spacing: 0.5px;
+    }
+    .hidden { display: none !important; }
+    .alert { color: #e12b43; font-weight: bold;}
+    .works-setting {
+      margin-left: 22px;
+      margin-top: 7px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    #panelWorks > div {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+  #panelPrice > div {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        align-items: flex-start;
+      }
+  .price-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+  #panelPrice h5 {
+        margin: 0 0 4px 0;
+        font-size: 1.05em;
+        color: #007aff;
+      }
+    .scroll-x-guide {      text-align: right;
+      color: #aaa;
+      font-size: 0.94em;
+      padding: 0 4px 0 0;
+    }
+    .scroll-x-container {
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    @media (max-width: 900px) {
+      .container {padding: 5px;}
+      .block {padding: 8px;}
+      table, .ss-table {font-size: 13px;}
+      input, select { font-size: 0.97em; }
+      .ss-table { min-width: 600px; }
+    }
+    @media (max-width: 600px) {
+      body { font-size: 14px; margin: 0; }
+      .container {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 8px;
+        border-radius: 0;
+      }
+      .tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; }
+      .block { margin: 10px 0; padding: 8px 6px; display:flex; flex-direction: column; }
+      .block label { display:block; margin-right:0; margin-bottom:6px; }
+      table, .ss-table { width: auto; min-width: 650px; display: block; font-size: 14px; overflow-x:auto; }
+      input, select { padding: 10px 8px; width: 100% !important; max-width: none; margin-bottom:10px; font-size: 14px; }
+      .btn { width:100%; margin:8px 0; padding:12px; font-size:16px; }
+      .siteName { width: 100% !important; max-width: none; }
+      .numeric { width: 100% !important; min-width: 100px; }
+    .controls { flex-direction: column; align-items: stretch; }
+    .controls select, .controls button { margin-left:0; }
+    }
+
+.calc-keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.calc-key {
+  padding: 14px 0;
+  font-size: 1.2em;
+  background: #f0f0f3;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.calc-key:active {
+  background: #dcdce0;
+}
+
+.calc-equal {
+  grid-column: span 4;
+  background: #007aff;
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .calc-key {
+    padding: 18px 0;
+    font-size: 1.4em;
+  }
+}
