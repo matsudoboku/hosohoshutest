@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>舗装補修計算ツール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">  <meta name="theme-color" content="#4caf50">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+
+  <div class="block controls" style="margin-bottom:26px">
+    <label>現場名:</label>
+    <input id="siteName" class="siteName" placeholder="例：〇〇号線">
+    <button class="btn" onclick="addSite()">追加</button>
+    <button class="btn" onclick="renameSite()">名称変更</button>
+    <select id="siteList" onchange="switchSite()"></select>
+  </div>
+
+  <!-- タブ（動的生成） -->
+  <div class="tabs" id="tabsArea"></div>
+  <div class="scroll-x-guide">(横スクロール可)</div>
+
+  <!-- 工種設定タブ -->
+  <div id="panelWorks" class="block">
+    <h4>工種設定</h4>
+    <div>
+      <label>土工 <input type="checkbox" id="chkWorksEarth" onchange="renderTabs()"></label>
+      <div id="worksEarthSetting" class="works-setting hidden">
+        <label>舗装面積と同じ <input type="checkbox" id="earthSamePave" onchange="saveAndUpdate();renderTabs()"></label>
+        <select id="earthType" onchange="saveAndUpdate()">
+          <option>標準掘削</option>
+          <option>標準以下掘削</option>
+        </select>
+        <label>掘削厚（cm）：<input type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" id="earthThick" style="width:60px;" onchange="saveAndUpdate()"></label>      </div>
+    </div>
+    <div>
+      <label>取り壊し工 <input type="checkbox" id="chkWorksDemo" onchange="renderTabs()"></label>
+      <div id="worksDemoSetting" class="works-setting hidden">
+        <label>舗装面積と同じ <input type="checkbox" id="demoSamePave" onchange="saveAndUpdate();renderTabs()"></label>
+        <select id="demoType" onchange="updateDemoThickDefault()">
+          <option>As</option>
+          <option>Con</option>
+          <option>As+Con</option>
+        </select>
+         <label>取壊し厚（cm）：<input type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" id="demoThick" style="width:60px;" oninput="saveAndUpdate(false)" onblur="saveAndUpdate(true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>舗装版切断（m）：<input type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" id="demoCutting" style="width:60px;" oninput="saveAndUpdate(false)" onblur="saveAndUpdate(true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+    </div>
+    <div>
+      <label>安全施設工 <input type="checkbox" id="chkWorksAnzen" onchange="renderTabs()"></label>
+      <div id="worksAnzenSetting" class="works-setting hidden">
+        <label>外側線：<input id="anzenLineOuter" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editAnzen('line_outer', this.value)" onblur="editAnzen('line_outer', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>停止線：<input id="anzenLineStop" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editAnzen('line_stop', this.value)" onblur="editAnzen('line_stop', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>文字記号：<input id="anzenLineSymbol" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editAnzen('line_symbol', this.value)" onblur="editAnzen('line_symbol', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+    </div>
+    <div>
+      <label>仮設工 <input type="checkbox" id="chkWorksKari" onchange="renderTabs()"></label>
+      <div id="worksKariSetting" class="works-setting hidden">
+        <label>交通誘導員B：<input id="kariTrafficB" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editKari('traffic_b', this.value)" onblur="editKari('traffic_b', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>仮設信号機：<input id="kariTempSignal" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editKari('temp_signal', this.value)" onblur="editKari('temp_signal', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>重機運搬費：<input id="kariMachineTrans" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editKari('machine_transport', this.value)" onblur="editKari('machine_transport', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+    </div>
+    <div>
+      <label>雑工 <input type="checkbox" id="chkWorksZatsu" onchange="renderTabs()"></label>
+    </div>
+    <div style="overflow-x:auto;">
+      <div class="summary-table"></div>
+    </div>
+  </div>
+
+  <!-- 土工タブ -->
+  <div id="panelEarth" class="block hidden">
+    <h4>土工（体積計算）</h4>
+    <button class="btn" onclick="addRow('earth')">行追加</button>
+    <div id="earthTable" style="overflow-x:auto;">
+      <div class="scroll-x-guide">(横スクロール可)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>測点</th>
+            <th>単距</th>
+            <th>追距</th>
+            <th>幅員</th>
+            <th>面積</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyEarth"></tbody>
+      </table>
+    </div>
+    <div id="earthResult" class="sum"></div>
+    <div style="overflow-x:auto;">
+      <div class="summary-table"></div>
+    </div>
+  </div>
+  <!-- 舗装工タブ -->
+    <div id="panelPave" class="block hidden">
+      <h4>舗装工</h4>
+      <button class="btn" onclick="addRow('pave')">行追加</button>
+    <div style="overflow-x:auto;">
+      <div class="scroll-x-guide">(横スクロール可)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>種別</th>
+            <th>測点</th>
+            <th>単距</th>
+            <th>追距</th>
+            <th>幅員</th>
+            <th>平均幅員</th>
+            <th>面積</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPave"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;">
+      <label>アスカーブ <input type="checkbox" id="chkCurbUse" onchange="toggleCurbInputs()"></label>
+      <span id="curbInputs" class="hidden">
+        <label>標準：<input id="curbStd" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" style="width:80px;" oninput="editCurb('std', this.value)" onblur="editCurb('std', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>小型：<input id="curbSmall" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" style="width:80px;" oninput="editCurb('small', this.value)" onblur="editCurb('small', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>手盛：<input id="curbHand" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" style="width:80px;" oninput="editCurb('hand', this.value)" onblur="editCurb('hand', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+    </div>
+    <div class="sum">
+      <div class="scroll-x-guide">(横スクロール可)</div>
+      <div id="sumPave" class="scroll-x-container"></div>
+    </div>
+    <div style="overflow-x:auto;">
+      <div class="summary-table"></div>
+    </div>
+  </div> 
+  <!-- 取り壊し工タブ -->
+  <div id="panelDemo" class="block hidden">
+    <h4>取り壊し工</h4>
+    <button class="btn" onclick="addRow('demo')">行追加</button>
+    <div id="demoTable" style="overflow-x:auto;">
+      <div class="scroll-x-guide">(横スクロール可)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>測点</th>
+            <th>単距</th>
+            <th>追距</th>
+            <th>幅員</th>
+            <th>面積</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyDemo"></tbody>
+      </table>
+    </div>
+    <div id="demoResult" class="sum"></div>
+    <div style="overflow-x:auto;">
+      <div class="summary-table"></div>
+    </div>
+  </div>
+  <!-- 雑工タブ -->
+  <div id="panelZatsu" class="block hidden">
+    <h4>雑工</h4>
+    <button class="btn" onclick="addRow('zatsu')">行追加</button>
+    <div style="overflow-x:auto;">
+      <div class="scroll-x-guide">(横スクロール可)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>工種</th>
+            <th>規格</th>
+            <th>単位</th>
+            <th>数量</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyZatsu"></tbody>
+      </table>
+      <datalist id="zatsuNameList"></datalist>
+    </div>
+    <div id="zatsuResult" class="sum"></div>
+    <div style="overflow-x:auto;">
+      <div class="summary-table"></div>
+    </div>
+  </div>
+  <!-- 単価設定タブ -->
+  <div id="panelPrice" class="block hidden">
+    <h4>単価設定</h4>
+    <div>
+      <div class="price-group">
+        <h5>土工</h5>
+        <label>機械掘削：<input id="priceEarthMachine" data-price-work="earth_machine" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('earth_machine', this.value)" onblur="editPrice('earth_machine', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>残土処理：<input id="priceEarthSoil" data-price-work="earth_soil" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('earth_soil', this.value)" onblur="editPrice('earth_soil', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+      <div class="price-group">
+        <h5>取壊工</h5>
+        <label>舗装版切断：<input id="priceDemoCut" data-price-work="demo_cut" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('demo_cut', this.value)" onblur="editPrice('demo_cut', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>舗装版破砕As：<input id="priceDemoBreakAs" data-price-work="demo_break_as" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('demo_break_as', this.value)" onblur="editPrice('demo_break_as', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>廃材運搬As：<input id="priceDemoHaulAs" data-price-work="demo_haul_as" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('demo_haul_as', this.value)" onblur="editPrice('demo_haul_as', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>廃材処理As：<input id="priceDemoDisposeAs" data-price-work="demo_dispose_as" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('demo_dispose_as', this.value)" onblur="editPrice('demo_dispose_as', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>舗装版破砕Con：<input id="priceDemoBreakCon" data-price-work="demo_break_con" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('demo_break_con', this.value)" onblur="editPrice('demo_break_con', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>廃材運搬Con：<input id="priceDemoHaulCon" data-price-work="demo_haul_con" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('demo_haul_con', this.value)" onblur="editPrice('demo_haul_con', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>廃材処理Con：<input id="priceDemoDisposeCon" data-price-work="demo_dispose_con" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('demo_dispose_con', this.value)" onblur="editPrice('demo_dispose_con', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+      <div class="price-group">
+        <h5>舗装・路盤</h5>
+        <label>アスファルト1.4未満：<input id="pricePaveAsLt14" data-price-work="pave_as_lt14" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_as_lt14', this.value)" onblur="editPrice('pave_as_lt14', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>アスファルト1.4以上：<input id="pricePaveAsGe14" data-price-work="pave_as_ge14" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_as_ge14', this.value)" onblur="editPrice('pave_as_ge14', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>アスファルト3.0以上：<input id="pricePaveAsGe3" data-price-work="pave_as_ge3" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_as_ge3', this.value)" onblur="editPrice('pave_as_ge3', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>上層路盤工：<input id="pricePaveBase" data-price-work="pave_base" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_base', this.value)" onblur="editPrice('pave_base', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>オーバーレイ1.4未満：<input id="pricePaveOverlayLt14" data-price-work="pave_overlay_lt14" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_overlay_lt14', this.value)" onblur="editPrice('pave_overlay_lt14', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>オーバーレイ1.4以上：<input id="pricePaveOverlayGe14" data-price-work="pave_overlay_ge14" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_overlay_ge14', this.value)" onblur="editPrice('pave_overlay_ge14', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>オーバーレイ3.0以上：<input id="pricePaveOverlayGe3" data-price-work="pave_overlay_ge3" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_overlay_ge3', this.value)" onblur="editPrice('pave_overlay_ge3', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>コンクリート：<input id="pricePaveConcrete" data-price-work="pave_concrete" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('pave_concrete', this.value)" onblur="editPrice('pave_concrete', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+      <div class="price-group">
+        <h5>縁石</h5>
+        <label>標準アスカーブ：<input id="priceCurbStd" data-price-work="curb_std" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('curb_std', this.value)" onblur="editPrice('curb_std', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>小型アスカーブ：<input id="priceCurbSmall" data-price-work="curb_small" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('curb_small', this.value)" onblur="editPrice('curb_small', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>手盛アスカーブ：<input id="priceCurbHand" data-price-work="curb_hand" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('curb_hand', this.value)" onblur="editPrice('curb_hand', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+      <div class="price-group">
+        <h5>安全施設</h5>
+        <label>区画線設置 外側線：<input id="priceSafetyLineOuter" data-price-work="safety_line_outer" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('safety_line_outer', this.value)" onblur="editPrice('safety_line_outer', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>区画線設置 停止線：<input id="priceSafetyLineStop" data-price-work="safety_line_stop" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('safety_line_stop', this.value)" onblur="editPrice('safety_line_stop', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>区画線設置 文字記号：<input id="priceSafetyLineSymbol" data-price-work="safety_line_symbol" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('safety_line_symbol', this.value)" onblur="editPrice('safety_line_symbol', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>交通誘導員B：<input id="priceSafetyTrafficB" data-price-work="safety_traffic_b" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('safety_traffic_b', this.value)" onblur="editPrice('safety_traffic_b', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+        <label>仮設信号機：<input id="priceSafetyTempSignal" data-price-work="safety_temp_signal" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('safety_temp_signal', this.value)" onblur="editPrice('safety_temp_signal', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+      <div class="price-group">
+        <h5>その他</h5>
+        <label>重機運搬費：<input id="priceOtherMachineTrans" data-price-work="other_machine_transport" type="text" inputmode="decimal" pattern="[0-9.+-]*" class="numeric" oninput="editPrice('other_machine_transport', this.value)" onblur="editPrice('other_machine_transport', this.value, true)" onkeydown="if(event.key==='Enter') this.blur();"></label>
+      </div>
+    </div>
+    <div id="priceTotal" class="sum"></div>
+  </div>
+  <!-- データ管理・出力タブ -->
+  <div id="panelData" class="block hidden">
+    <button class="btn" onclick="exportSummaryExcel()">合計表出力</button>
+    <button class="btn" onclick="exportQuantityExcel()">数量計算書出力</button>
+    <div style="margin-top:10px;">
+      <button class="btn" onclick="exportDXF()">DXFエクスポート</button>
+      <button class="btn" onclick="exportAllZip()">一括出力</button>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn" onclick="backupData()">バックアップ</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">インポート</button>
+      <input id="importFile" type="file" accept="application/json" onchange="importData(event)" style="display:none;">
+    </div>
+  </div>
+  <!-- 免責事項タブ -->
+  <div id="panelDisclaimer" class="block hidden">
+    <p>
+      本Webアプリは無保証で提供しています。利用による一切の損害について、作者は責任を負いません。<br>
+      業務・商用利用の際は必ずご自身で検証し利用を検討してください。<br>
+      <b>出力データ（DXF等）は参考用です。必ず自己責任でご利用ください。</b>
+    </p>
+  </div>
+  <div id="fatalAlert" class="alert hidden"></div>
+  <button id="calcButton" class="calc-fab" onclick="openCalc()">🖩</button>
+  <div id="calcOverlay" class="calc-overlay hidden" onclick="if(event.target.id==='calcOverlay') closeCalc()">
+    <div class="calc-dialog" onclick="event.stopPropagation()">
+      <input id="calcInput" type="text" onkeydown="calcKey(event)" placeholder="0" inputmode="decimal" pattern="[0-9.+\-*/()]*">
+      <div class="calc-keypad">
+        <button class="calc-key" onclick="calcInsert('7')">7</button>
+        <button class="calc-key" onclick="calcInsert('8')">8</button>
+        <button class="calc-key" onclick="calcInsert('9')">9</button>
+        <button class="calc-key" onclick="calcInsert('/')">÷</button>
+        <button class="calc-key" onclick="calcInsert('4')">4</button>
+        <button class="calc-key" onclick="calcInsert('5')">5</button>
+        <button class="calc-key" onclick="calcInsert('6')">6</button>
+        <button class="calc-key" onclick="calcInsert('*')">×</button>
+        <button class="calc-key" onclick="calcInsert('1')">1</button>
+        <button class="calc-key" onclick="calcInsert('2')">2</button>
+        <button class="calc-key" onclick="calcInsert('3')">3</button>
+        <button class="calc-key" onclick="calcInsert('-')">−</button>
+        <button class="calc-key" onclick="calcInsert('0')">0</button>
+        <button class="calc-key" onclick="calcInsert('.')">.</button>
+        <button class="calc-key" onclick="calcClear()">C</button>
+        <button class="calc-key" onclick="calcInsert('+')">+</button>
+        <button class="calc-key calc-equal" onclick="calcCalculate()">=</button>
+      </div>
+      <div id="calcResult" class="result"></div>
+      <button class="btn" onclick="closeCalc()">閉じる</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js');
+    });
+  }
+</script>
+
+</body>
+</html>
